@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { TopAppBar } from "../AppBar/AppBar";
 import { StyleButton } from "../StyleButton/StyleButton";
 import { makeStyles } from "@mui/styles";
@@ -7,6 +7,10 @@ import { Check, ArrowUpward } from "@mui/icons-material";
 import * as turf from "@turf/turf";
 import { useSelector } from "react-redux";
 import { userState } from "../../redux/slices/userSlice";
+import { getAuth } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
+import UserInformation from "../userInformation";
+import { Button } from "@mui/material";
 
 const schoolUbication = {
   accuracy: 35,
@@ -27,6 +31,15 @@ const buttonStyles = makeStyles((theme) => ({
 
 const CheckIn = () => {
   const user = useSelector(userState);
+  const auth = getAuth();
+  const fbUser = auth.currentUser;
+  let navigate = useNavigate();
+
+  useEffect(() => {
+    if (fbUser === null) {
+      navigate("/");
+    }
+  }, [fbUser]);
 
   const [latitude, setLatitude] = useState(0);
   const [longitude, setLongitude] = useState(0);
@@ -54,6 +67,7 @@ const CheckIn = () => {
     <>
       <TopAppBar />
       <div>
+        <UserInformation name={"Jose luis"} />
         <Grid container spacing={2} style={{ justifyContent: "center" }}>
           <StyleButton name={"Registrar entrada"} action={getUbication}>
             <Check className={classes.icon} />
@@ -61,11 +75,6 @@ const CheckIn = () => {
           <StyleButton name={"Registrar Salida"}>
             <ArrowUpward className={classes.icon} />
           </StyleButton>
-          <button
-            type="button"
-            label="imprimir"
-            onClick={() => console.log(user)}
-          />
         </Grid>
       </div>
     </>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { LoginForm } from "../../components/LoginForm/LoginForm";
 import { RegisterForm } from "../../components/RegisterForm/registerForm";
 import { useNavigate } from "react-router-dom";
@@ -8,13 +8,17 @@ import {
   getAuth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
+  onAuthStateChanged,
 } from "firebase/auth";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs } from "firebase/firestore";
 import { useDispatch } from "react-redux";
 import { setUser } from "../../redux/slices/userSlice";
+import { doc, getDoc, query, where } from "firebase/firestore";
 
 const Login = () => {
   const dispatch = useDispatch();
+  const auth = getAuth();
+  const user = auth.currentUser;
   let navigate = useNavigate();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("@colegioherbart.edu.mx");
@@ -85,11 +89,24 @@ const Login = () => {
     }
   };
 
-  const tryLogin = () => {
-    const auth = getAuth();
-    signInWithEmailAndPassword(auth, email, password).then((response) => {
-      navigate("/CheckPage");
-    });
+  const tryLogin = async () => {
+    try {
+      let userObj = {};
+      const querySnapshot = await getDocs(
+        collection(db, "users"),
+        where("uid", "==", user.uid)
+      );
+      querySnapshot.forEach((doc) => {
+        userObj = doc.data().infoData;
+      });
+      dispatch(setUser(userObj));
+      signInWithEmailAndPassword(auth, email, password).then((response) => {
+        console.log(response.user.uid);
+        navigate("/CheckPage");
+      });
+    } catch (err) {
+      console.log(err);
+    }
   };
 
   return (
